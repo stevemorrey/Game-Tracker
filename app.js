@@ -1,12 +1,14 @@
 // --- CONFIGURATION ---
-// REPLACE THIS WITH YOUR FIREBASE CONFIG
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDBOD9Q_iYiST8SiRBlJHdETkphM91Cj1w",
+  authDomain: "game-tracker-1452f.firebaseapp.com",
+  projectId: "game-tracker-1452f",
+  storageBucket: "game-tracker-1452f.firebasestorage.app",
+  messagingSenderId: "499397697814",
+  appId: "1:499397697814:web:2697d50e416e3b13883037",
+  measurementId: "G-4C2346YDRH"
 };
 
 // Initialize Firebase
