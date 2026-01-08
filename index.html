@@ -14,6 +14,12 @@
 
     <div class="container">
         <h1>🛡️ Clan Game Night</h1>
+        <div id="admin-panel" style="display:none; background: #440a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px;"> 
+            <h3>👑 Admin Controls</h3>
+            <p>Set Next Game Date:</p>
+            <input type="datetime-local" id="admin-date-picker" style="padding: 5px;">
+            <button onclick="updateGameDate()">Update Timer</button>
+        </div>
 
         <div id="countdown-box">
             <h3>Next Game In:</h3>
