@@ -16,26 +16,64 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- COUNTDOWN LOGIC ---
-// Set the date we're counting down to
-const nextGameDate = new Date("Jan 20, 2026 20:00:00").getTime();
-document.getElementById("game-date").innerText = "Target: " + new Date(nextGameDate).toDateString();
+// --- SMART RECURRING COUNTDOWN --- 
 
-const x = setInterval(function() {
+function getNextGameDate() {
+    const now = new Date();
+    
+    // CONFIGURATION: Change these two lines to your schedule
+    const targetDay = 5; // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    const targetHour = 20; // 24-hour format (20 = 8 PM)
+
+    const nextDate = new Date(now);
+    
+    // 1. Calculate how many days until the target day
+    // The modulo (%) math ensures we wrap around the week correctly
+    let daysUntil = (targetDay + 7 - now.getDay()) % 7;
+
+    // 2. Check if the game is today but the time has already passed
+    // If so, we want next week's game (add 7 days)
+    if (daysUntil === 0 && now.getHours() >= targetHour) {
+        daysUntil = 7;
+    }
+
+    // 3. Set the date and time
+    nextDate.setDate(now.getDate() + daysUntil);
+    nextDate.setHours(targetHour, 0, 0, 0);
+
+    return nextDate;
+}
+
+// Initialize the timer
+const nextGame = getNextGameDate();
+const nextGameTime = nextGame.getTime();
+
+// Display the target date in text (e.g., "Target: Fri Jan 23 2026")
+document.getElementById("game-date").innerText = "Next Game: " + nextGame.toDateString() + " @ " + nextGame.getHours() + ":00";
+
+// Run the Countdown
+const timerInterval = setInterval(function() {
     const now = new Date().getTime();
-    const distance = nextGameDate - now;
+    const distance = nextGameTime - now;
 
+    // Time calculations
     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    document.getElementById("timer").innerHTML = days + "d " + hours + "h " + minutes + "m ";
+    // Display
+    document.getElementById("timer").innerHTML = 
+        days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
 
+    // If the countdown is over
     if (distance < 0) {
-        clearInterval(x);
-        document.getElementById("timer").innerHTML = "GAME TIME!";
+        clearInterval(timerInterval);
+        document.getElementById("timer").innerHTML = "GAME TIME! 🎮";
+        // Optional: Reload page after 1 hour to trigger the next week's timer
     }
 }, 1000);
+
 
 // --- AUTHENTICATION ---
 function googleLogin() {
