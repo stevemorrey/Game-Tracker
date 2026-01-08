@@ -1,1 +1,46 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Night Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🛡️ Clan Game Night</h1>
+
+        <div id="countdown-box">
+            <h3>Next Game In:</h3>
+            <div id="timer">Loading...</div>
+            <p id="game-date">Date: TBD</p>
+        </div>
+
+        <div id="auth-section">
+            <button id="login-btn" onclick="googleLogin()">Login with Google</button>
+            <div id="user-info" style="display:none;">
+                <p>Welcome, <span id="username">User</span></p>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <hr>
+
+        <div id="availability-section" style="display:none;">
+            <h3>Are you available?</h3>
+            <button id="status-btn" onclick="toggleAvailability()">Mark as Available</button>
+            
+            <h3>Who is ready?</h3>
+            <ul id="player-list">
+                </ul>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
