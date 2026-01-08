@@ -11,38 +11,56 @@ const firebaseConfig = {
   measurementId: "G-4C2346YDRH"
 };
 
+// --- CONFIGURATION ---
+// Add the email addresses of the admins here
+const ADMIN_EMAILS = ["stevemorrey@gmail.com"];
+
+
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- SMART RECURRING COUNTDOWN --- 
+// --- 1. COUNTDOWN LOGIC (Now Database Driven) ---
+let nextGameDate = 0; // Will be updated from database
 
-function getNextGameDate() {
-    const now = new Date();
-    
-    // CONFIGURATION: Change these two lines to your schedule
-    const targetDay = 5; // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
-    const targetHour = 20; // 24-hour format (20 = 8 PM)
+// Listen to the "settings" collection in the database
+db.collection("settings").doc("gameNight").onSnapshot(doc => {
+    if (doc.exists) {
+        // Convert Firestore Timestamp to JS Date
+        const data = doc.data();
+        nextGameDate = data.nextDate.toDate().getTime(); 
+        
+        // Update the text immediately
+        const dateObj = new Date(nextGameDate);
+        document.getElementById("game-date").innerText = 
+            "Next Game: " + dateObj.toDateString() + " @ " + dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } else {
+        document.getElementById("game-date").innerText = "Date: TBD";
+    }
+});
 
-    const nextDate = new Date(now);
-    
-    // 1. Calculate how many days until the target day
-    // The modulo (%) math ensures we wrap around the week correctly
-    let daysUntil = (targetDay + 7 - now.getDay()) % 7;
+// The Timer Loop (Runs every second)
+setInterval(function() {
+    if (nextGameDate === 0) return; // Don't run if we haven't loaded the date yet
 
-    // 2. Check if the game is today but the time has already passed
-    // If so, we want next week's game (add 7 days)
-    if (daysUntil === 0 && now.getHours() >= targetHour) {
-        daysUntil = 7;
+    const now = new Date().getTime();
+    const distance = nextGameDate - now;
+
+    if (distance < 0) {
+        document.getElementById("timer").innerHTML = "GAME TIME! 🎮";
+        return;
     }
 
-    // 3. Set the date and time
-    nextDate.setDate(now.getDate() + daysUntil);
-    nextDate.setHours(targetHour, 0, 0, 0);
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-    return nextDate;
-}
+    document.getElementById("timer").innerHTML = 
+        days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+}, 1000);
+
 
 // Initialize the timer
 const nextGame = getNextGameDate();
@@ -75,19 +93,46 @@ const timerInterval = setInterval(function() {
 }, 1000);
 
 
-// --- AUTHENTICATION ---
-function googleLogin() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-        .then(result => {
-            console.log("Logged in:", result.user);
-        })
-        .catch(console.error);
+// --- 2. UPDATED AUTH LOGIC (With Admin Check) ---
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // ... existing show/hide logic ...
+        document.getElementById("login-btn").style.display = "none";
+        document.getElementById("user-info").style.display = "block";
+        document.getElementById("availability-section").style.display = "block";
+        document.getElementById("username").innerText = user.displayName;
+        checkMyStatus(user);
+
+        // CHECK IF ADMIN
+        if (ADMIN_EMAILS.includes(user.email)) {
+            document.getElementById("admin-panel").style.display = "block";
+        }
+    } else {
+        // ... existing hide logic ...
+        document.getElementById("login-btn").style.display = "inline-block";
+        document.getElementById("user-info").style.display = "none";
+        document.getElementById("availability-section").style.display = "none";
+        document.getElementById("admin-panel").style.display = "none";
+    }
+});
+
+
+// --- 3. ADMIN FUNCTION TO SAVE DATE ---
+function updateGameDate() {
+    const inputVal = document.getElementById("admin-date-picker").value;
+    if (!inputVal) return alert("Please pick a date!");
+
+    const newDate = new Date(inputVal);
+
+    // Save to Firestore "settings/gameNight"
+    db.collection("settings").doc("gameNight").set({
+        nextDate: firebase.firestore.Timestamp.fromDate(newDate),
+        updatedBy: auth.currentUser.email
+    })
+    .then(() => alert("Timer Updated Successfully!"))
+    .catch(err => alert("Error: " + err.message));
 }
 
-function logout() {
-    auth.signOut();
-}
 
 // Monitor Login State
 auth.onAuthStateChanged(user => {
